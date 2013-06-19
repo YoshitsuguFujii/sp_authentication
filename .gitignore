@@ -21,3 +21,4 @@ tmp
 .ruby-version
 tags
 sp_authentication.log
+sp_authentication.log.*
