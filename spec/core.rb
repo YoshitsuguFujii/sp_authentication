@@ -129,10 +129,15 @@ describe SpAuthentication::Core do
       it "シグネチャが一致しない" do
         request.stub(:method){:get}
         request.env["HTTP_SIGNATURE"]   = "ABDAFDFEE"
-        User.should_receive(:where).and_return([User.new])
         expect { authenticate_user }.to raise_error(SpAuthentication::CustomError::UnauthorizedError)
       end
 
+      it "ユーザが一致しない" do
+        request.stub(:method){:put}
+        request.env["HTTP_SIGNATURE"]   = "FoYh7Xw4q4WCVu%2B3IIAnOsBY3to%3D"
+        User.stub(:where){[]}
+        expect { authenticate_user }.to raise_error(SpAuthentication::CustomError::UserNotFound)
+      end
     end
   end  #}}}
 end

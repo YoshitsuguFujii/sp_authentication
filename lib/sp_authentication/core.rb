@@ -5,18 +5,16 @@ module SpAuthentication
     include CustomError
 
     def sp_authentication
-      # configureを呼び出して色々設定してからloggerを作りたいのでこの位置に・・・
-      require 'sp_authentication/sp_authentication_logger'
-
       # 判定用のメソッドを追加
       class_eval do
 
-        # ユーザの特定なしの認証 {{{
+        # ユーザの特定なしの認証
         # 1.consumer_key
         # 2.signature
         # 3.sp_type
         # 4.version
         def authenticate_request
+          require_logger
           setting_check
           header_signature    = request.env[SpAuthentication.signature_header_name]
           header_consumer_key = request.env[SpAuthentication.consumer_key_header_name]
@@ -57,11 +55,14 @@ module SpAuthentication
             SpAuthenticationLogger.raise_with_log(UnauthorizedError, "access_token or consumer_key or siganature not match")
           end
         end
-        # }}}
 
-        # ユーザ特定ありの認証 {{{
+
+        # ユーザ特定ありの認証
           def authenticate_user
-            setting_check
+            unless authenticate_request
+              SpAuthenticationLogger.raise_with_log(UnauthorizedError, "access_token or consumer_key or siganature not match")
+            end
+
             header_access_token  = request.env[SpAuthentication.access_token_header_name]
 
             if header_access_token.nil?
@@ -74,17 +75,18 @@ module SpAuthentication
 
             if user.nil?
               SpAuthenticationLogger.raise_with_log(UserNotFound, "header_access_token match user not exists")
-            end
-
-            if authenticate_request
-              return user
             else
-              SpAuthenticationLogger.raise_with_log(UnauthorizedError, "access_token or consumer_key or siganature not match")
+              return user
             end
           end
-        # }}}
 
-        # setting_check {{{
+
+        def require_logger
+          # configureを呼び出して色々設定してからloggerを作りたいのでこの位置に・・・
+          require 'sp_authentication/sp_authentication_logger'
+        end
+
+        # setting_check
         def setting_check
           # error if setting is none
           if SpAuthentication.secret_key.nil? || SpAuthentication.consumer_key.nil?
@@ -99,7 +101,7 @@ module SpAuthentication
             SpAuthenticationLogger.raise_with_log(SettingError, err_message)
           end
         end
-        # }}}
+
       end
     end
   end
