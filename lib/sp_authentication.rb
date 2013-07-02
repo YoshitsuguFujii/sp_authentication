@@ -15,4 +15,4 @@ module SpAuthentication
   end
 end
 
-#ActionController::Base.send(:extend, SpAuthentication) if defined?(ActionController)
+ActionController::Base.send(:extend, SpAuthentication) if defined?(ActionController)
